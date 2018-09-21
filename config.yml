@@ -1,0 +1,5 @@
+nomenclature:
+  name: categories
+  verboseName: Categories
+constants:
+  rootNodeName: ROOT

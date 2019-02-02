@@ -81,8 +81,8 @@ class Category(MPTTModel):
 
         for category in categories:
             print(type(category))
-            name = category['name']
-            category_slug = category['slug']
+            name = category.name
+            category_slug = category.slug
 
             parent = Category.objects.create(
                 name=name,
@@ -91,7 +91,7 @@ class Category(MPTTModel):
             )
 
             res &= parent._create_recursively(
-                categories=category.get('subcategories') or [],
+                categories=category.subcategories or [],
                 app_slug=app_slug
             )
 

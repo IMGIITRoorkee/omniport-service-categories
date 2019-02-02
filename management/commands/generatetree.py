@@ -29,9 +29,11 @@ class Command(BaseCommand):
                 print(app_conf)
                 app_node, _ = Category.objects.get_or_create(
                     slug=app_conf.nomenclature.name,
-                    defaults={'name': app_conf.nomenclature.name}
+                    defaults={'name': app_conf.nomenclature.verbose_name}
                 )
-            except AttributeError:
+                app_node.generate_tree(app_conf.categories)
+            except AttributeError as e:
+                print(str(e))
                 raise CommandError('Invalid application/service name')
 
         self.stdout.write(

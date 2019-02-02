@@ -1,5 +1,6 @@
 nomenclature:
   name: categories
   verboseName: Categories
-constants:
-  rootNodeName: ROOT
+baseUrls:
+  http: categories/
+  ws: categories/

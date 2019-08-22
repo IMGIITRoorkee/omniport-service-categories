@@ -22,22 +22,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for app in options['apps']:
             app_conf = DISCOVERY.get_app_configuration(app)
-            # if not app_conf:
-            #     raise CommandError('Invalid application/service name')
+            if not app_conf:
+                raise CommandError('Invalid application/service name')
 
             try:
-                print(app_conf)
-                app_node, _ = Category.objects.get_or_create(
-                    slug=app_conf.nomenclature.name,
-                    defaults={'name': app_conf.nomenclature.verbose_name}
-                )
-                app_node.generate_tree(app_conf.categories)
+                Category.generate_tree(app_conf.categorisation)
             except AttributeError as e:
                 print(str(e))
                 raise CommandError('Invalid application/service name')
 
         self.stdout.write(
             self.style.SUCCESS(
-                f'Successfully generated category trees for {options["apps"]}'
+                f'Successfully generated category trees for '
+                f'{", ".join(options["apps"])}'
             )
         )

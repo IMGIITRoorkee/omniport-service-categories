@@ -1,23 +1,11 @@
-from kernel.serializers.root import ModelSerializer
-
-from categories.models import Category
+from categories.serializers import CategorySerializer
 
 
-class CategoryTreeSerializer(ModelSerializer):
+class CategoryTreeSerializer(CategorySerializer):
     """
     Serializer class for 'Category' model to represent data in tree structure
     """
     pagination_class = None
-
-    class Meta:
-        """
-        Meta class for 'CategoryTreeSerializer'
-        """
-        model = Category
-        fields = (
-            'name',
-            'slug'
-        )
 
     def to_representation(self, instance):
         """
@@ -27,11 +15,11 @@ class CategoryTreeSerializer(ModelSerializer):
         """
 
         representation = super().to_representation(instance)
-        print(type(representation), representation)
+
         if not instance.is_leaf_node():
-            representation['children'] = []
+            representation['subcategories'] = []
             for child in instance.get_children():
-                representation['children'].append(
+                representation['subcategories'].append(
                     CategoryTreeSerializer(child).data
                 )
 

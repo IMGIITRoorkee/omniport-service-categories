@@ -50,29 +50,36 @@ class Category(MPTTModel):
 
         return f'{name}: {slug}'
 
-    def get_application(self):
+    @property
+    def app(self):
         """
         Get node of the application/service this category belongs to
         :return: A root instance of category mptt model
         """
+        if self.is_root_node():
+            return None
+
         return self.get_root()
 
-    def generate_tree(self, categories):
+    @classmethod
+    def generate_tree(cls, parent):
         """
         Use to create the category tree in the database
-        :param categories: List of category objects
+        :param parent: categorisation object read from the config file
         :return: success True/False
         """
 
-        if not self.is_root_node():
-            raise AttributeError('Method valid for only app root node')
-
-        result = self._create_recursively(categories, self.slug)
+        root, _ = cls.objects.get_or_create(
+            slug=parent.slug,
+            defaults={'name': parent.name},
+        )
+        result = root.create_recursively(parent.subcategories, root.slug)
         return result
 
-    def _create_recursively(self, categories, app_slug):
+    def create_recursively(self, categories, app_slug):
         """
         Recursive function to generate category nodes
+        :param app_slug: slug of the app/service
         :param categories: List of category objects
         :return: Success True/False
         """
@@ -80,17 +87,16 @@ class Category(MPTTModel):
         res = True
 
         for category in categories:
-            print(type(category))
             name = category.name
             category_slug = category.slug
 
-            parent = Category.objects.create(
+            parent, _ = Category.objects.update_or_create(
                 name=name,
                 slug=f'{app_slug}__{category_slug}',
                 parent=self
             )
 
-            res &= parent._create_recursively(
+            res &= parent.create_recursively(
                 categories=category.subcategories or [],
                 app_slug=app_slug
             )

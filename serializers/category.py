@@ -1,4 +1,4 @@
-from kernel.serializers.root import ModelSerializer
+from formula_one.serializers.base import ModelSerializer
 
 from categories.models import Category
 
@@ -15,7 +15,7 @@ class CategorySerializer(ModelSerializer):
         model = Category
         fields = (
             'name',
-            'slug'
+            'slug',
         )
 
     def to_representation(self, instance):
@@ -25,11 +25,11 @@ class CategorySerializer(ModelSerializer):
         :return: Serialized representation of the object
         """
         representation = super().to_representation(instance)
-        if instance.level < 2:
-            return representation
 
-        app = instance.get_application()
+        app = instance.app
+        representation['isApp'] = True
         if app is not None:
+            representation['isApp'] = False
             representation['app'] = CategorySerializer(app).data
 
         return representation

@@ -3,7 +3,7 @@ from django_redis import get_redis_connection
 from categories.models import Category
 
 
-client = get_redis_connection('notification')
+client = get_redis_connection('communication')
 
 
 class Subscription:
@@ -26,7 +26,8 @@ class Subscription:
 
     def save(self):
         """
-        To save the subscription in database
+        To save person for an action for all the subcategories of the
+        category with slug to self.category_slug
         :return: success True/False
         """
 
@@ -60,10 +61,10 @@ class Subscription:
 
         return True
 
-    def unsubscribe(self):
+    def delete(self):
         """
-        To unsubscribe user for an action from all the subcategories of this
-        category
+        To delete person for an action from all the subcategories of the
+        category with slug to self.category_slug
         :return: success True/False
         """
 
@@ -92,6 +93,7 @@ class Subscription:
                 self.person_id
             )
         _ = pipe.execute()  # Non-strict query
+
         return True
 
     @staticmethod

@@ -1,6 +1,8 @@
 nomenclature:
   name: categories
   verboseName: Categories
+description: Categorization
 baseUrls:
   http: categories/
   ws: categories/
+isApi: false

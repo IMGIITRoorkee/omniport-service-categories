@@ -97,7 +97,7 @@ class Category(MPTTModel):
             )
 
             res &= parent.create_recursively(
-                categories=category.subcategories or [],
+                categories=category.categories or [],
                 app_slug=app_slug
             )
 

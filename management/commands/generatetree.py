@@ -30,7 +30,6 @@ class Command(BaseCommand):
                 slug=app_conf.nomenclature.name,
                 parent=None,
             )
-
             try:
                 root_node.create_recursively(
                     categories=app_conf.categorisation.categories,

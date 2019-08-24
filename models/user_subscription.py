@@ -1,6 +1,6 @@
 from django.db import models
 
-from core.formula_one.models.base import Model
+from formula_one.models.base import Model
 from categories.redisdb import Subscription
 
 

@@ -5,4 +5,4 @@ description: Categorization
 baseUrls:
   http: categories/
   ws: categories/
-isApi: false
+isApi: true

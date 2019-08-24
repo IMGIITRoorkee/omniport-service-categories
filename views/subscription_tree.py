@@ -4,17 +4,28 @@ from rest_framework.viewsets import ModelViewSet
 
 from discovery.available import available_apps
 from categories.models import Category
-from categories.serializers import CategoryTreeSerializer
+from categories.serializers import SubscriptionTreeSerializer
 
 
-class CategoryTreeViewSet(ModelViewSet):
+class SubscriptionTreeViewSet(ModelViewSet):
     """
-    The view for read operations of category tree
+    The view for read operations of subscription tree
     """
 
-    serializer_class = CategoryTreeSerializer
+    serializer_class = SubscriptionTreeSerializer
     permission_classes = [IsAuthenticated, ]
     http_method_names = ['get', ]
+
+    def get_serializer_context(self):
+        """
+        TODO
+        :return:
+        """
+
+        return {
+            'person': self.request.person,
+            'action': self.request.query_params.get('action'),
+        }
 
     def get_queryset(self):
         """

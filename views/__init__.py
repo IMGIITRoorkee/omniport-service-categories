@@ -1,1 +1,1 @@
-from categories.views.category_tree import CategoryTreeViewSet
+from categories.views.subscription_tree import SubscriptionTreeViewSet

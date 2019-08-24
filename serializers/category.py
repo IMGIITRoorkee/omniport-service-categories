@@ -1,3 +1,4 @@
+from configuration.serializers.app.assets import AssetsSerializer
 from formula_one.serializers.base import ModelSerializer
 
 from categories.models import Category
@@ -27,9 +28,8 @@ class CategorySerializer(ModelSerializer):
         representation = super().to_representation(instance)
 
         app = instance.app
-        representation['isApp'] = True
-        if app is not None:
-            representation['isApp'] = False
-            representation['app'] = CategorySerializer(app).data
+        representation['isApp'] = app == instance
+        representation['app'] = CategorySerializer(app)
+
 
         return representation

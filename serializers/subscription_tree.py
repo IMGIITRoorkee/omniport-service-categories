@@ -1,7 +1,8 @@
 from categories.serializers import CategorySerializer
+from categories.models import UserSubscription
 
 
-class CategoryTreeSerializer(CategorySerializer):
+class SubscriptionTreeSerializer(CategorySerializer):
     """
     Serializer class for 'Category' model to represent data in tree structure
     """
@@ -15,12 +16,20 @@ class CategoryTreeSerializer(CategorySerializer):
         """
 
         representation = super().to_representation(instance)
+        representation['subscribed'] = UserSubscription.objects.filter(
+            person=self.context.get('person'),
+            category=instance,
+            action=self.context.get('action'),
+        ).exists()
 
         if not instance.is_leaf_node():
             representation['subcategories'] = []
             for child in instance.get_children():
                 representation['subcategories'].append(
-                    CategoryTreeSerializer(child).data
+                    SubscriptionTreeSerializer(
+                        child,
+                        context=self.context
+                    ).data
                 )
 
         return representation

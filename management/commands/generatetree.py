@@ -25,8 +25,17 @@ class Command(BaseCommand):
             if not app_conf:
                 raise CommandError('Invalid application/service name')
 
+            root_node, _ = Category.objects.update_or_create(
+                name=app_conf.nomenclature.verbose_name,
+                slug=app_conf.nomenclature.name,
+                parent=None,
+            )
+
             try:
-                Category.generate_tree(app_conf.categorisation)
+                root_node.create_recursively(
+                    categories=app_conf.categorisation.categories,
+                    app_slug=root_node.slug
+                )
             except AttributeError as e:
                 print(str(e))
                 raise CommandError('Invalid application/service name')

@@ -1,2 +1,2 @@
 from categories.serializers.category import CategorySerializer
-from categories.serializers.category_tree import CategoryTreeSerializer
+from categories.serializers.subscription_tree import SubscriptionTreeSerializer

@@ -57,7 +57,7 @@ class Category(MPTTModel):
         :return: A root instance of category mptt model
         """
         if self.is_root_node():
-            return None
+            return self
 
         return self.get_root()
 

@@ -1,3 +1,4 @@
+import swapper
 from django.db import models
 
 from formula_one.models.base import Model
@@ -10,7 +11,7 @@ class UserSubscription(Model):
     """
 
     person = models.ForeignKey(
-        to='kernel.Person',
+        to=swapper.get_model_name('kernel', 'Person'),
         db_index=True,
         on_delete=models.CASCADE,
     )
@@ -31,7 +32,7 @@ class UserSubscription(Model):
 
     def __str__(self):
         return f'{self.action}' \
-            f': {self.person.id}[{self.person.full_name}] ' \
+            f': {self.person.full_name} ' \
             f'- {self.category.slug}'
 
     def subscribe(self):
@@ -87,7 +88,11 @@ class UserSubscription(Model):
             return False
 
         try:
-            self.delete()
+            self.__class__.objects.get(
+                person=self.person,
+                category=self.category,
+                action=self.action,
+            ).delete()
         except UserSubscription.DoesNotExist:
             _ = Subscription(
                 person_id=self.person.id,

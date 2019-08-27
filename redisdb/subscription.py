@@ -57,9 +57,8 @@ class Subscription:
                 self.person_id
             )
 
-            _ = pipe.execute()  # Non-strict query
-
-        return True
+        res = pipe.execute()  # Non-strict query
+        return all(res)
 
     def delete(self):
         """
@@ -92,12 +91,11 @@ class Subscription:
                 f'categories:subscription:{self.action}:{category.slug}',
                 self.person_id
             )
-        _ = pipe.execute()  # Non-strict query
-
-        return True
+        res = pipe.execute()  # Non-strict query
+        return all(res)
 
     @staticmethod
-    def fetch_persons(category_slug, action):
+    def fetch_people(category_slug, action):
         """
         Static method to fetch subscribed users corresponding
          to a category for a particular action.
@@ -114,7 +112,7 @@ class Subscription:
             )
 
         # Get all leaf nodes of this root category
-        sub_categories = root.get_descendants().filter(rght=F('lft') + 1)
+        sub_categories = root.get_descendants(include_self=True).filter(rght=F('lft') + 1)
         categories = list(sub_categories)
         categories.append(root)
 

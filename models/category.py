@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from mptt.models import MPTTModel, TreeForeignKey
 
 
@@ -60,6 +61,13 @@ class Category(MPTTModel):
             return self
 
         return self.get_root()
+
+    @property
+    def app_config(self):
+        """
+        :return:
+        """
+        return settings.DISCOVERY.get_app_configuration(self.app.slug)
 
     @classmethod
     def generate_tree(cls, parent):

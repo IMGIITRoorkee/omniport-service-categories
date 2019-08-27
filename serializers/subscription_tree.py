@@ -1,3 +1,4 @@
+from categories.models import Category
 from categories.serializers import CategorySerializer
 from categories.models import UserSubscription
 

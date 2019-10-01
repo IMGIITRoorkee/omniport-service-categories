@@ -16,7 +16,6 @@ class Category(MPTTModel):
     slug = models.SlugField(
         db_index=True,
         unique=True,
-        primary_key=True
     )
     parent = TreeForeignKey(
         to='self',

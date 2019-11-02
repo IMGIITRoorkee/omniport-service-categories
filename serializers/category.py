@@ -19,6 +19,7 @@ class CategorySerializer(ModelSerializer):
         fields = (
             'name',
             'slug',
+            'meta',
         )
 
     def to_representation(self, instance):

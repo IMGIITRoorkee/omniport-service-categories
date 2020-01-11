@@ -1,8 +1,7 @@
 from django.conf import settings
 
 from formula_one.serializers.base import ModelSerializer
-from configuration.serializers.app.app import NomenclatureSerializer
-
+from configuration.serializers.app.app import AppSerializer
 from categories.models import Category
 
 
@@ -34,9 +33,9 @@ class CategorySerializer(ModelSerializer):
 
         representation['isApp'] = app == instance
         app_config = settings.DISCOVERY.get_app_configuration(app.slug)
-        if not representation['isApp'] and app_config:
-            representation['appInfo'] = NomenclatureSerializer(
-                app_config.nomenclature
+        if app_config:
+            representation['appInfo'] = AppSerializer(
+                app_config,
             ).data
 
         return representation

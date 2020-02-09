@@ -11,7 +11,7 @@ router = routers.SimpleRouter()
 router.register(
     prefix='subscription_tree',
     viewset=SubscriptionTreeViewSet,
-    base_name='subscription_tree'
+    basename='subscription_tree'
 )
 
 urlpatterns = [

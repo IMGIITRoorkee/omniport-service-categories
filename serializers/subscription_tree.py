@@ -19,7 +19,7 @@ class SubscriptionTreeSerializer(CategorySerializer):
         representation = super().to_representation(instance)
         representation['subscribed'] = UserSubscription.objects.filter(
             person=self.context.get('person'),
-            category=instance,
+            category__in=instance.get_ancestors(include_self = True),
             action=self.context.get('action'),
         ).exists()
 

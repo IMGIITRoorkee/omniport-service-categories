@@ -1,8 +1,6 @@
 from categories.models import Category,UserSubscription
 
-class getSubscription:
-    should_subscribe = {}
-    selected = {}
+class GetSubscription:
     def __init__(self,save,drop,person,action):
             self.save = save
             self.drop = drop

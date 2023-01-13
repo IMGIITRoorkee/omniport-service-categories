@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.postgres.fields import JSONField
 from django.conf import settings
 from mptt.models import MPTTModel, TreeForeignKey
 
@@ -25,7 +24,7 @@ class Category(MPTTModel):
         null=True,
         blank=True,
     )
-    meta = JSONField(
+    meta = models.JSONField(
         verbose_name='Meta Information',
         help_text='Additional information stored as per requirements',
         blank=True,

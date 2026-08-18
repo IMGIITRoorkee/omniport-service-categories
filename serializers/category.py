@@ -1,14 +1,21 @@
 from django.conf import settings
+from rest_framework import serializers
 
 from formula_one.serializers.base import ModelSerializer
 from configuration.serializers.app.app import AppSerializer
 from categories.models import Category
+
+# Category.meta also holds the token that gates emails/send/, so only the keys
+# the interface reads are serialized
+PUBLIC_META_KEYS = ('icon',)
 
 
 class CategorySerializer(ModelSerializer):
     """
     Serializer class for 'Category' model
     """
+
+    meta = serializers.SerializerMethodField()
 
     class Meta:
         """
@@ -20,6 +27,21 @@ class CategorySerializer(ModelSerializer):
             'slug',
             'meta',
         )
+
+    def get_meta(self, instance):
+        """
+        Restrict the serialized meta to the keys the interface reads
+        :param instance: Object of the 'Category' model
+        :return: The public subset of the object's meta information
+        """
+
+        meta = instance.meta or {}
+
+        return {
+            key: meta[key]
+            for key in PUBLIC_META_KEYS
+            if key in meta
+        }
 
     def to_representation(self, instance):
         """

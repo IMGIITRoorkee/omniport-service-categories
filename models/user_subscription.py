@@ -50,7 +50,7 @@ class UserSubscription(Model):
         # rather than leaving the two stores disagreeing
         try:
             with transaction.atomic():
-                UserSubscription.objects.get_or_create(
+                self.__class__.objects.get_or_create(
                     person=self.person,
                     category=self.category,
                     action=self.action,

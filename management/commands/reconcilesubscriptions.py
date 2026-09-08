@@ -3,8 +3,6 @@ from django_redis import get_redis_connection
 
 from categories.models import Category, UserSubscription
 
-client = get_redis_connection('communication')
-
 BATCH_SIZE = 5000
 
 
@@ -20,10 +18,11 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--dry-run', action='store_true')
-        parser.add_argument('--action', nargs='*', type=str)
+        parser.add_argument('--action', nargs='+', type=str)
 
     def handle(self, *args, **options):
         dry_run = options['dry_run']
+        client = get_redis_connection('communication')
 
         subscribers = {}
         actions = set()
@@ -37,6 +36,7 @@ class Command(BaseCommand):
             actions &= set(options['action'])
 
         categories = list(Category.objects.all())
+        parents = {category.id: category.parent_id for category in categories}
         added = removed = 0
 
         for action in sorted(actions):
@@ -48,14 +48,16 @@ class Command(BaseCommand):
                 # A leaf inherits its ancestors' subscribers because
                 # Subscription.save fans a subscription out over leaf
                 # descendants; anything else is subscribed to directly
+                sources = [category.id]
                 if category.is_leaf_node():
-                    sources = category.get_ancestors(include_self=True)
-                else:
-                    sources = [category]
+                    parent_id = parents.get(category.id)
+                    while parent_id is not None:
+                        sources.append(parent_id)
+                        parent_id = parents.get(parent_id)
 
                 expected = set()
                 for source in sources:
-                    expected |= subscribers.get((action, source.id), set())
+                    expected |= subscribers.get((action, source), set())
 
                 key = f'categories:subscription:{action}:{category.slug}'
                 current = {int(member) for member in client.smembers(key)}

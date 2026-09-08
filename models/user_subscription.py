@@ -1,8 +1,12 @@
+import logging
+
 import swapper
-from django.db import models
+from django.db import models, transaction
 
 from formula_one.models.base import Model
 from categories.redisdb import Subscription
+
+logger = logging.getLogger('categories')
 
 
 class UserSubscription(Model):
@@ -42,26 +46,26 @@ class UserSubscription(Model):
         :return: success True/False
         """
 
-        # Update redis db entries
+        # The row is written first so that a failing Redis write rolls it back,
+        # rather than leaving the two stores disagreeing
         try:
-            redis_subscription = Subscription(
-                category_slug=self.category.slug,
-                person_id=self.person.id,
-                action=self.action,
+            with transaction.atomic():
+                self.__class__.objects.get_or_create(
+                    person=self.person,
+                    category=self.category,
+                    action=self.action,
+                )
+                Subscription(
+                    category_slug=self.category.slug,
+                    person_id=self.person.id,
+                    action=self.action,
+                ).save()
+        except Exception:
+            logger.exception(
+                'Could not subscribe person %s to %s for %s',
+                self.person_id, self.category.slug, self.action,
             )
-        except ValueError:
-            # TODO Log
             return False
-
-        redis_result = redis_subscription.save()
-        if not redis_result:
-            return False
-
-        UserSubscription.objects.create(
-            person=self.person,
-            category=self.category,
-            action=self.action,
-        )
 
         return True
 
@@ -72,35 +76,23 @@ class UserSubscription(Model):
         :return: success True/False
         """
 
-        # Update redis db entries
         try:
-            redis_subscription = Subscription(
-                person_id=self.person.id,
-                category_slug=self.category.slug,
-                action=self.action,
+            with transaction.atomic():
+                self.__class__.objects.filter(
+                    person=self.person,
+                    category=self.category,
+                    action=self.action,
+                ).delete()
+                Subscription(
+                    person_id=self.person.id,
+                    category_slug=self.category.slug,
+                    action=self.action,
+                ).delete()
+        except Exception:
+            logger.exception(
+                'Could not unsubscribe person %s from %s for %s',
+                self.person_id, self.category.slug, self.action,
             )
-        except ValueError:
-            # TODO Log
             return False
-
-        redis_result = redis_subscription.delete()
-        if not redis_result:
-            return False
-
-        try:
-            self.__class__.objects.get(
-                person=self.person,
-                category=self.category,
-                action=self.action,
-            ).delete()
-        except UserSubscription.DoesNotExist:
-            _ = Subscription(
-                person_id=self.person.id,
-                category_slug=self.category.slug,
-                action=self.action,
-            ).delete()
-            return False
-
-        # TODO : Check for empty children subscription
 
         return True

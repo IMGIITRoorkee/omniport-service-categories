@@ -12,16 +12,23 @@ class Command(BaseCommand):
     """
 
     help = """Rebuild the Redis subscription sets from the database, which is
-    the source of truth the settings interface reads.
+    the source of truth the settings interface reads. Additions subscribe people
+    to categories created after they subscribed, so --no-additions is the way to
+    repair drift without also widening anybody's subscriptions.
     Usage: django-admin reconcilesubscriptions [--dry-run] [--action ACTION]
+    [--no-additions | --no-removals]
     """
 
     def add_arguments(self, parser):
         parser.add_argument('--dry-run', action='store_true')
         parser.add_argument('--action', nargs='+', type=str)
+        parser.add_argument('--no-additions', action='store_true')
+        parser.add_argument('--no-removals', action='store_true')
 
     def handle(self, *args, **options):
         dry_run = options['dry_run']
+        add_allowed = not options['no_additions']
+        remove_allowed = not options['no_removals']
         client = get_redis_connection('communication')
 
         subscribers = {}
@@ -62,17 +69,19 @@ class Command(BaseCommand):
                 key = f'categories:subscription:{action}:{category.slug}'
                 current = {int(member) for member in client.smembers(key)}
 
-                for person_id in expected - current:
-                    action_added += 1
-                    if not dry_run:
-                        pipe.sadd(key, person_id)
-                        queued += 1
+                if add_allowed:
+                    for person_id in expected - current:
+                        action_added += 1
+                        if not dry_run:
+                            pipe.sadd(key, person_id)
+                            queued += 1
 
-                for person_id in current - expected:
-                    action_removed += 1
-                    if not dry_run:
-                        pipe.srem(key, person_id)
-                        queued += 1
+                if remove_allowed:
+                    for person_id in current - expected:
+                        action_removed += 1
+                        if not dry_run:
+                            pipe.srem(key, person_id)
+                            queued += 1
 
                 if queued >= BATCH_SIZE:
                     pipe.execute()

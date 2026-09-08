@@ -57,8 +57,10 @@ class Subscription:
                 self.person_id
             )
 
-        res = pipe.execute()  # Non-strict query
-        return all(res)
+        # SADD answers 0 for a member that is already present, which is a
+        # no-op and not a failure. Only an exception means the write failed
+        pipe.execute()
+        return True
 
     def delete(self):
         """
@@ -91,8 +93,10 @@ class Subscription:
                 f'categories:subscription:{self.action}:{category.slug}',
                 self.person_id
             )
-        res = pipe.execute()  # Non-strict query
-        return all(res)
+        # SREM answers 0 for a member that is already absent, which is a
+        # no-op and not a failure
+        pipe.execute()
+        return True
 
     @staticmethod
     def fetch_people(category_slug, action):

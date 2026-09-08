@@ -22,8 +22,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--dry-run', action='store_true')
         parser.add_argument('--action', nargs='+', type=str)
-        parser.add_argument('--no-additions', action='store_true')
-        parser.add_argument('--no-removals', action='store_true')
+        direction = parser.add_mutually_exclusive_group()
+        direction.add_argument('--no-additions', action='store_true')
+        direction.add_argument('--no-removals', action='store_true')
 
     def handle(self, *args, **options):
         dry_run = options['dry_run']

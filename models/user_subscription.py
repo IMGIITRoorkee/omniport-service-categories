@@ -39,6 +39,25 @@ class UserSubscription(Model):
             f': {self.person.full_name} ' \
             f'- {self.category.slug}'
 
+    def _grant_delivery(self):
+        """
+        Add the person to the communication store
+        :return: None
+        """
+
+        try:
+            Subscription(
+                category_slug=self.category.slug,
+                person_id=self.person.id,
+                action=self.action,
+            ).save()
+        except Exception:
+            logger.exception(
+                'Subscribed person %s to %s for %s but could not update the '
+                'communication store; reconcilesubscriptions repairs this',
+                self.person_id, self.category.slug, self.action,
+            )
+
     def subscribe(self):
         """
         Custom create method to sync database and communication-store
@@ -46,8 +65,9 @@ class UserSubscription(Model):
         :return: success True/False
         """
 
-        # The row is written first so that a failing Redis write rolls it back,
-        # rather than leaving the two stores disagreeing
+        # Delivery is granted on commit of the outermost transaction, never
+        # earlier, so that a rollback cannot leave someone being delivered to
+        # with no row behind it
         try:
             with transaction.atomic():
                 self.__class__.objects.get_or_create(
@@ -55,11 +75,7 @@ class UserSubscription(Model):
                     category=self.category,
                     action=self.action,
                 )
-                Subscription(
-                    category_slug=self.category.slug,
-                    person_id=self.person.id,
-                    action=self.action,
-                ).save()
+                transaction.on_commit(self._grant_delivery)
         except Exception:
             logger.exception(
                 'Could not subscribe person %s to %s for %s',
@@ -76,16 +92,19 @@ class UserSubscription(Model):
         :return: success True/False
         """
 
+        # Revoked before the row rather than on commit, because a rollback
+        # then leaves the person subscribed but undelivered, which reconciles,
+        # rather than unsubscribed but still delivered, which does not
         try:
+            Subscription(
+                person_id=self.person.id,
+                category_slug=self.category.slug,
+                action=self.action,
+            ).delete()
             with transaction.atomic():
                 self.__class__.objects.filter(
                     person=self.person,
                     category=self.category,
-                    action=self.action,
-                ).delete()
-                Subscription(
-                    person_id=self.person.id,
-                    category_slug=self.category.slug,
                     action=self.action,
                 ).delete()
         except Exception:

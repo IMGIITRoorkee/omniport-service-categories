@@ -43,7 +43,10 @@ class GetSubscription:
                     all_selected = False
             
             self.should_subscribe[node.slug] = False
-            if all_selected:
+            #a node with meta.keepChildren is never stored in place of its children,
+            #so a child added later doesn't pick up everyone who ticked the old ones
+            keep_children = (node.meta or {}).get('keepChildren')
+            if all_selected and not keep_children:
                 self.should_subscribe[node.slug] = True #if all children need to be subscribed, subscribe this node instead of children
                 for child in children:
                     self.should_subscribe[child.slug] = False #unsubscribe all children nodes
